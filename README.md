@@ -6,7 +6,7 @@ We (4 collaborators) run regular zoom meetings to discuss issues and plan activi
 of the meeting to capture results of the discussion. 
 
 ## This project
-Create a Python program that will generate Meeting Minutes as a PDF for distribution to all collaborators 
+Create a Python program that will generate Meeting Minutes as a PDF for distribution to all collaborators.
 
 ## Usage
 
@@ -21,10 +21,10 @@ written to a PDF ``myProject_2020_10_25_minutes.pdf``
 
 Here is an idea for creating agendas
 
-* Enter each agenda topic as a GitHub issue, label it as  ``Agenda Item``
-* Prepend ``00``, ``01``, ``02`` to the title of each issue to allow the desired ordering of the agenda items
+* enter each agenda topic as a GitHub issue, label it as  ``Agenda Item``
+* prepend ``00``, ``01``, ``02`` to the title of each issue to allow the desired ordering of the agenda items
 * immediately close each issue so as not to pollute your list of "real" issues
-* produce your agenda using ``./generate_agenda.py``
+* produce your agenda PDF using ``./generate_agenda.py``
 
 ## Resources to use
 The project will be built using:
