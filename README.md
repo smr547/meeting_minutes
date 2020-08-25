@@ -1,5 +1,5 @@
 # meeting_mintes
-Create meeting agendas and minutes based on GitHub Issues
+Create meeting agendas and minutes based on ``issues`` in a GitHub repository
 
 ## Background
 We (4 collaborators) run regular zoom meetings to discuss issues and plan activities related to our current project. We want to generate minutes 
