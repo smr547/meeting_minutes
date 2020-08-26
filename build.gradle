@@ -21,6 +21,10 @@ dependencies {
   compile group: 'com.itextpdf', name: 'html2pdf', version: '2.1.6'
 
   compile group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.15.2'
+
+  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
 }
 
 // If Java formatter checks fail, tell the user how to fix them.
