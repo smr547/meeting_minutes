@@ -1,4 +1,4 @@
-# meeting_mintes
+# meeting_minutes
 Create meeting agendas and minutes based on ``issues`` in a GitHub repository
 
 ## Background
