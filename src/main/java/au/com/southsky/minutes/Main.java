@@ -11,9 +11,8 @@ import org.kohsuke.github.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -28,7 +27,8 @@ public class Main {
                 "\n" +
                 "body {\n" +
                 "  color: #444;\n" +
-                "  font-family: Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif;\n" +
+         //       "  font-family: Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif;\n" +
+                "  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;\n" +
                 "  font-size: 12px;\n" +
                 "  line-height: 1.5em;\n" +
                 "  padding: 1em;\n" +
@@ -333,6 +333,15 @@ public class Main {
             c.usage();
             System.exit(1);
         }
+        if (o.help) {
+            System.out.println("Full source code at: https://github.com/smr547/meeting_minutes");
+            c.usage();
+            System.exit(1);
+        }
+
+        Set<String> optionalLabels = new HashSet<>(o.labels);
+        LocalDate now = LocalDate.now();
+
 
         GitHub h = GitHub.connect();
         GHUser user = h.getUser(o.username);
@@ -342,29 +351,39 @@ public class Main {
                 .append("<h1>")
                 .append(o.repositoryName)
                 .append(" meeting ")
-                .append(o.label)
+                .append(o.getLabelsString())
                 .append("</h1>")
-                .append("<p>Issues labelled as \"")
-                .append(o.label)
-                .append("\" with comments recorded after ")
+                .append("<p>Report generated ")
+                .append(now)
+                .append("<br>Selected issues labelled with ")
+                .append(o.getLabelsString())
+                .append("<br>listing comments recorded after ")
                 .append(o.fromDate.toString())
                 .append("</p><ul>");
 
         // GHIssue issue = repo.getIssue(345);
         ArrayList<GHIssue> agendaIssues = new ArrayList<>();
         for (GHIssue issue : repo.getIssues(GHIssueState.ALL)) {
-            if (issue.getLabels().stream().map(GHLabel::getName).anyMatch(s -> s.equals(o.label))) {
+
+            Set<String> issueLabels = new HashSet<>();
+
+            for (GHLabel label : issue.getLabels()) {
+                issueLabels.add(label.getName());
+            }
+            Set<String> intersection = new HashSet<>(issueLabels);
+            intersection.retainAll(optionalLabels);
+
+            if (!intersection.isEmpty()) {
                 agendaIssues.add(issue);
             }
         }
 
         // sort the agenda items
-        if (o.label.equals("Agenda")) {
+        if (o.labels.get(0).equals("Agenda")) {
             agendaIssues.sort(Comparator.comparing(GHIssue::getTitle));
         }
 
         for (GHIssue issue : agendaIssues) {
-
             System.out.println("Issue " + issue.getNumber());
             builder.append("<h2>");
             builder.append(issue.getTitle());
@@ -397,6 +416,10 @@ public class Main {
     }
 
     public static class Options {
+
+        @Parameter(names = "--help", help = true)
+        private boolean help;
+
         @Parameter(
                 required = true,
                 names = {"-u", "--username"},
@@ -416,7 +439,7 @@ public class Main {
                 names = {"-l", "--label"},
                 description = "The issues to extract"
         )
-        String label;
+        List<String> labels = new ArrayList<>();
 
         @Parameter(
                 required = true,
@@ -431,5 +454,14 @@ public class Main {
                 description = "Don't include comments on timestamps"
         )
         boolean noTimestamp = false;
+
+        public String getLabelsString() {
+            StringBuilder result = new StringBuilder(this.labels.get(0).toString());
+            for (int i=1; i<this.labels.size(); i++) {
+                result.append(", ");
+                result.append(this.labels.get(i));
+            }
+            return result.toString();
+        }
     }
 }

@@ -34,4 +34,4 @@ The project will be built using:
 * [pyFPDF](https://pypi.org/project/fpdf/) to create the PDF file
 
 ## Project status
-Just an idea at this stage
+Initial coding work is done in Java by @sjamesr. Also applied a GitHub-markdown CSS.
