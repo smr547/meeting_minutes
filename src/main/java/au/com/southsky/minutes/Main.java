@@ -347,18 +347,22 @@ public class Main {
         GHUser user = h.getUser(o.username);
         GHRepository repo = user.getRepository(o.repositoryName);
 
+        String b4 = "";
+        if (o.toDate != null) {
+            b4 = " but on or before " + o.toDate.toString();
+        }
+
         StringBuilder builder = new StringBuilder(style)
                 .append("<h1>")
-                .append(o.repositoryName)
-                .append(" meeting ")
-                .append(o.getLabelsString())
+                .append((o.reportHeading == null) ? o.repositoryName + " meeting " + o.getLabelsString() : o.reportHeading)
                 .append("</h1>")
                 .append("<p>Report generated ")
                 .append(now)
-                .append("<br>Selected issues labelled with ")
-                .append(o.getLabelsString())
+                .append((!o.getLabelsString().isEmpty()) ? "<br>Selected issues labelled with "+o.getLabelsString():"<br>All issues")
+                .append((o.includeClosed)?" (including closed issues)" : "")
                 .append("<br>listing comments recorded after ")
                 .append(o.fromDate.toString())
+                .append(b4)
                 .append("</p><ul>");
 
         // GHIssue issue = repo.getIssue(345);
@@ -373,13 +377,18 @@ public class Main {
             Set<String> intersection = new HashSet<>(issueLabels);
             intersection.retainAll(optionalLabels);
 
-            if (!intersection.isEmpty()) {
+            // reject issues that a closed unless includeClosed option is true
+            if (! o.includeClosed && issue.getState() == GHIssueState.CLOSED ) {
+                continue;
+            }
+
+            if (!intersection.isEmpty() || o.labels.isEmpty()) {
                 agendaIssues.add(issue);
             }
         }
 
         // sort the agenda items
-        if (o.labels.get(0).equals("Agenda")) {
+        if (o.sortByTitle) {
             agendaIssues.sort(Comparator.comparing(GHIssue::getTitle));
         }
 
@@ -389,21 +398,24 @@ public class Main {
             builder.append(issue.getTitle());
             builder.append("</h2>");
 
-            for (GHIssueComment comment : issue.getComments()) {
+            List<GHIssueComment> comments = issue.getComments();
+            for (GHIssueComment comment : comments) {
                 String body = comment.getBody();
                 if (!body.isEmpty() && comment.getCreatedAt().after(o.fromDate)) {
-                    if (!o.noTimestamp) {
-                        builder
-                                .append("<small>(Comment by ")
-                                .append(comment.getUser().getName())
-                                .append(" on ")
-                                .append(comment.getCreatedAt())
-                                .append("):</small>");
+                    if (o.toDate == null || comment.getCreatedAt().before(o.toDate)) {
+                        if (!o.noTimestamp) {
+                            builder
+                                    .append("<small>(Comment by ")
+                                    .append(comment.getUser().getName())
+                                    .append(" on ")
+                                    .append(comment.getCreatedAt())
+                                    .append("):</small>");
+                        }
+                        Parser mdParser = Parser.builder().build();
+                        Node mdDoc = mdParser.parse(body);
+                        HtmlRenderer renderer = HtmlRenderer.builder().build();
+                        builder.append(renderer.render(mdDoc));
                     }
-                    Parser mdParser = Parser.builder().build();
-                    Node mdDoc = mdParser.parse(body);
-                    HtmlRenderer renderer = HtmlRenderer.builder().build();
-                    builder.append(renderer.render(mdDoc));
                 }
             }
         }
@@ -434,10 +446,18 @@ public class Main {
         )
         String repositoryName;
 
+
         @Parameter(
-                required = true,
+                required = false,
+                names = {"-h", "--heading"},
+                description = "Report heading"
+        )
+        String reportHeading;
+
+        @Parameter(
+                required = false,
                 names = {"-l", "--label"},
-                description = "The issues to extract"
+                description = "Labels specifying the issues of interest, default to ALL issues"
         )
         List<String> labels = new ArrayList<>();
 
@@ -450,18 +470,43 @@ public class Main {
 
         @Parameter(
                 required = false,
+                names = {"-t", "--to_date"},
+                description = "Include comments up to and including the specified date"
+        )
+        Date toDate;
+
+        @Parameter(
+                required = false,
+                names = {"-s", "--sortByTitle"},
+                description = "Sort the issues by their titles"
+        )
+        boolean sortByTitle = false;
+
+        @Parameter(
+                required = false,
+                names = {"-c", "--closed"},
+                description = "Include closed issues in listing"
+        )
+        boolean includeClosed = false;
+
+        @Parameter(
+                required = false,
                 names = {"-n", "--no_timestamp"},
                 description = "Don't include comments on timestamps"
         )
         boolean noTimestamp = false;
 
         public String getLabelsString() {
-            StringBuilder result = new StringBuilder(this.labels.get(0).toString());
-            for (int i=1; i<this.labels.size(); i++) {
-                result.append(", ");
-                result.append(this.labels.get(i));
+            if (this.labels.isEmpty()) {
+                return "";
+            } else {
+                StringBuilder result = new StringBuilder(this.labels.get(0).toString());
+                for (int i = 1; i < this.labels.size(); i++) {
+                    result.append(", ");
+                    result.append(this.labels.get(i));
+                }
+                return result.toString();
             }
-            return result.toString();
         }
     }
 }
