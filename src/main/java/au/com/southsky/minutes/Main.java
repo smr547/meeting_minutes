@@ -343,9 +343,14 @@ public class Main {
         LocalDate now = LocalDate.now();
 
 
-        GitHub h = GitHub.connect();
+        GitHub h = GitHub.connect(o.username, o.oauth);
         GHUser user = h.getUser(o.username);
         GHRepository repo = user.getRepository(o.repositoryName);
+
+        if (repo == null) {
+            System.out.println("Repository not found");
+            System.exit(1);
+        }
 
         String b4 = "";
         if (o.toDate != null) {
@@ -358,9 +363,13 @@ public class Main {
                 .append("</h1>")
                 .append("<p>Report generated ")
                 .append(now)
+                .append(" from GitHUB repository ")
+                .append(o.username)
+                .append("/")
+                .append(o.repositoryName)
                 .append((!o.getLabelsString().isEmpty()) ? "<br>Selected issues labelled with "+o.getLabelsString():"<br>All issues")
                 .append((o.includeClosed)?" (including closed issues)" : "")
-                .append("<br>listing comments recorded after ")
+                .append("<br>Listing comments recorded after ")
                 .append(o.fromDate.toString())
                 .append(b4)
                 .append("</p><ul>");
@@ -395,8 +404,33 @@ public class Main {
         for (GHIssue issue : agendaIssues) {
             System.out.println("Issue " + issue.getNumber());
             builder.append("<h2>");
+            if (o.issueIdInTitle) {
+                builder.append(issue.getNumber());
+                builder.append(" -- ");
+            }
             builder.append(issue.getTitle());
             builder.append("</h2>");
+
+            // if issue created within the specified time period then include the issue "body"
+            // also include the body if the includeBody option is set
+
+            if (o.includeBody || issue.getCreatedAt().after(o.fromDate)) {
+                if (o.includeBody || o.toDate == null || issue.getCreatedAt().before(o.toDate)) {
+                    String body = issue.getBody();
+                    if (!o.noTimestamp) {
+                        builder
+                                .append("<small>(Issue created by ")
+                                .append(issue.getUser().getName())
+                                .append(" on ")
+                                .append(issue.getCreatedAt())
+                                .append("):</small>");
+                    }
+                    Parser mdParser = Parser.builder().build();
+                    Node mdDoc = mdParser.parse(body);
+                    HtmlRenderer renderer = HtmlRenderer.builder().build();
+                    builder.append(renderer.render(mdDoc));
+                }
+            }
 
             List<GHIssueComment> comments = issue.getComments();
             for (GHIssueComment comment : comments) {
@@ -484,6 +518,13 @@ public class Main {
 
         @Parameter(
                 required = false,
+                names = {"-b", "--body"},
+                description = "Include body of issue irrespective of creation date"
+        )
+        boolean includeBody = false;
+
+        @Parameter(
+                required = false,
                 names = {"-c", "--closed"},
                 description = "Include closed issues in listing"
         )
@@ -495,6 +536,22 @@ public class Main {
                 description = "Don't include comments on timestamps"
         )
         boolean noTimestamp = false;
+
+        @Parameter(
+                required = false,
+                names = {"-i", "--issueId"},
+                description = "Include issue id in title"
+        )
+        boolean issueIdInTitle = false;
+
+        @Parameter(
+                required = true,
+                names = {"-o", "--oauth"},
+                description = "OAUTH key for repo"
+        )
+
+        String oauth;
+
 
         public String getLabelsString() {
             if (this.labels.isEmpty()) {
