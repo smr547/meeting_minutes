@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -554,16 +555,7 @@ public class Main {
 
 
         public String getLabelsString() {
-            if (this.labels.isEmpty()) {
-                return "";
-            } else {
-                StringBuilder result = new StringBuilder(this.labels.get(0).toString());
-                for (int i = 1; i < this.labels.size(); i++) {
-                    result.append(", ");
-                    result.append(this.labels.get(i));
-                }
-                return result.toString();
-            }
+            return String.join(", ", labels);
         }
     }
 }
