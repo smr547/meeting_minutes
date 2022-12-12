@@ -8,14 +8,19 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.kohsuke.github.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) throws IOException {
         // Markdown stylesheet courtesy:
         // https://github.com/simonlc/Markdown-CSS/blob/master/markdown.css
@@ -459,6 +464,7 @@ public class Main {
 
         try (FileOutputStream pdfFile = new FileOutputStream("/tmp/out.pdf")) {
             HtmlConverter.convertToPdf(builder.toString(), pdfFile);
+            logger.info("Wrote file {}", "/tmp/out.pdf");
         }
     }
 
