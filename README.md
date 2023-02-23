@@ -11,7 +11,12 @@ Create a Python program that will generate Meeting Minutes as a PDF for distribu
 ## Usage
 
 ```
-./generate_minutes.py -p my_project_url -d 25/10/2020 --actionLabel Action --output myProject_2020_10_25_minutes.pdf
+./gradlew run --args='-o ghp_90BR...secret.code...UYp1l1SPMSh  -u CanberraOceanRacingClub -r namadgi3 -f 2023-01-01'
+```
+or get help
+
+```
+./gradlew run --args='--help'
 ```
 
 The program will search all issues with ``Action`` label and list the comments dated ``25/10/2020``. The output will be
