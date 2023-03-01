@@ -462,9 +462,9 @@ public class Main {
 
         builder.append("</ul>");
 
-        try (FileOutputStream pdfFile = new FileOutputStream("/tmp/out.pdf")) {
+        try (FileOutputStream pdfFile = new FileOutputStream(o.outPath)) {
             HtmlConverter.convertToPdf(builder.toString(), pdfFile);
-            logger.info("Wrote file {}", "/tmp/out.pdf");
+            logger.info("Wrote file {}", o.outPath);
         }
     }
 
@@ -558,6 +558,14 @@ public class Main {
         )
 
         String oauth;
+
+        @Parameter(
+                required = false,
+                names = {"-p", "--path"},
+                description = "Output file path"
+        )
+
+        String outPath = "/tmp/out.pdf";
 
 
         public String getLabelsString() {
