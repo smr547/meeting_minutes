@@ -1,13 +1,13 @@
 plugins {
   id 'application'
 
-  id 'com.github.sherter.google-java-format' version '0.3.2'
+//  id 'com.github.sherter.google-java-format' version '0.3.2'
 }
 
 mainClassName = 'au.com.southsky.minutes.Main'
 
 wrapper {
-  gradleVersion = '6.6.1'
+  gradleVersion = '7.4.2'
 }
 
 repositories {
@@ -15,18 +15,18 @@ repositories {
 }
 
 dependencies {
-  compile group: 'com.beust', name: 'jcommander', version: '1.78'
-  compile group: 'org.kohsuke', name: 'github-api', version: '1.116'
-  compile group: 'com.itextpdf', name: 'itext7-core', version: '7.1.9'
-  compile group: 'com.itextpdf', name: 'html2pdf', version: '2.1.6'
+  implementation group: 'com.beust', name: 'jcommander', version: '1.78'
+  implementation group: 'org.kohsuke', name: 'github-api', version: '1.116'
+  implementation group: 'com.itextpdf', name: 'itext7-core', version: '7.1.9'
+  implementation group: 'com.itextpdf', name: 'html2pdf', version: '2.1.6'
 
-  compile group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.15.2'
+  implementation group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.15.2'
 
-  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
+  implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22'
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
 }
-
+/*
 // If Java formatter checks fail, tell the user how to fix them.
 task printFormatHelperMessage {
   doLast {
@@ -36,3 +36,4 @@ task printFormatHelperMessage {
 }
 verifyGoogleJavaFormat.finalizedBy printFormatHelperMessage
 printFormatHelperMessage.onlyIf { verifyGoogleJavaFormat.state.failure != null }
+*/
