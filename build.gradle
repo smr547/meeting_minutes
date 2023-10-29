@@ -25,7 +25,30 @@ dependencies {
   implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22'
   implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
   implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
+
+//  testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+//  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
+/*
+tasks.named('test', Test) {
+    useJUnitPlatform()
+
+    maxHeapSize = '1G'
+
+    testLogging {
+        events "passed"
+    }
+}
+*/
+test {
+  useJUnitPlatform()
+  testLogging.showStandardStreams=true
+}
+
+
 /*
 // If Java formatter checks fail, tell the user how to fix them.
 task printFormatHelperMessage {

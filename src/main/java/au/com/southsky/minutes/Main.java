@@ -18,10 +18,16 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import au.com.southsky.minutes.HashTag;
+
 public class Main {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   public static void main(String[] args) throws IOException {
+
+    HashTag ht = new HashTag("MyTag", "myPattern" );
+
+
     // Markdown stylesheet courtesy:
     // https://github.com/simonlc/Markdown-CSS/blob/master/markdown.css
     String style =
