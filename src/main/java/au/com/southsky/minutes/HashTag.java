@@ -3,20 +3,26 @@ package au.com.southsky.minutes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class HashTag {
 
-    public static ArrayList <HashTag> tagList;
+    // a Set containing all the known HashTags, keyed by a
+    public static HashMap <String, HashTag> hashTags;
+
     private String tagName;
     private Pattern pattern;
 
-    public HashTag(String tagName, String regex) {
+    private HashTag(String tagName, String regex) {
         this.tagName = tagName;
         this.pattern = Pattern.compile(regex);
+    }
+
+    public String getName() {
+        return this.tagName;
     }
 
     public String toString() {
@@ -24,7 +30,7 @@ public class HashTag {
     }
 
     public static void loadTagList(java.io.InputStream input) throws InvalidHashTagException {
-        tagList = new ArrayList <HashTag>();
+        hashTags = new HashMap <String, HashTag>();
 
         BufferedReader reader;
         try {
@@ -38,8 +44,8 @@ public class HashTag {
                     throw new InvalidHashTagException("Expected one fields in: " + line);
                 }
                 String tagName = extractTagName(line);
-                String pattern = line.split("=")[1];
-                tagList.add(new HashTag(tagName, pattern));
+                String pattern = line;
+                hashTags.put(tagName, new HashTag(tagName, pattern));
                 line = reader.readLine();
             }
             reader.close();
@@ -56,6 +62,14 @@ public class HashTag {
         if (!pattern.contains("=")) {
             throw new InvalidHashTagException("pattern must contain an '=' at " + pattern);
         }
-        return pattern.split("=")[0].substring(0);
+        return pattern.split("=")[0];
+    }
+
+    public String getValue(String someString) {
+        Matcher m = this.pattern.matcher(someString);;
+        if (m.find()) {
+            return m.group(1);
+        }
+        return null;
     }
 }

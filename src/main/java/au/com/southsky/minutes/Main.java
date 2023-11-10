@@ -11,7 +11,11 @@ import org.kohsuke.github.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
@@ -24,8 +28,6 @@ public class Main {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   public static void main(String[] args) throws IOException {
-
-    HashTag ht = new HashTag("MyTag", "myPattern" );
 
 
     // Markdown stylesheet courtesy:
@@ -353,6 +355,45 @@ public class Main {
       System.exit(1);
     }
 
+    // check hashtags
+
+    System.out.println("About to read hashtag resources");
+
+    try {
+    //  HashTag.loadTagList(Main.class.getResourceAsStream("known.tags"));
+    HashTag.loadTagList(new FileInputStream("/home/smr/projects/meeting_minutes/build/resources/main/known.tags"));
+    } catch (Exception e) {
+      System.out.println("Error reading known.tags: " + e.getLocalizedMessage());
+      System.exit(1);
+    }
+
+    System.out.println("Read hashtag resources");
+    // build list of active hashTags for this run
+    
+    ArrayList<HashTag> extractHashTags = new ArrayList<HashTag>();
+
+    for (String htKey : o.hashtags) {
+      if (!HashTag.hashTags.containsKey(htKey)) {
+        System.out.println("Unknow hashtag: " + htKey);
+        System.exit(1);
+      }
+      extractHashTags.add(HashTag.hashTags.get(htKey));
+    }
+
+    PrintWriter csvWriter = null;
+    if (extractHashTags.size() > 0) {
+      csvWriter = new PrintWriter(new FileWriter(o.outPath.substring(0, o.outPath.length()-3) + "csv", false));
+      String heading = (o.reportHeading == null)? (o.repositoryName + " meeting " + o.getLabelsString()): o.reportHeading;
+      csvWriter.println("\"" + heading + "\"");
+      csvWriter.print("Id,Issue title,");
+      for (HashTag ht : extractHashTags) {
+        csvWriter.print(ht.getName() + ",");
+      }
+      csvWriter.println();
+    }
+
+    
+
     Set<String> optionalLabels = new HashSet<>(o.labels);
     LocalDate now = LocalDate.now();
 
@@ -364,6 +405,7 @@ public class Main {
       System.out.println("Repository not found");
       System.exit(1);
     }
+
 
     String b4 = "";
     if (o.toDate != null) {
@@ -429,6 +471,8 @@ public class Main {
 
     for (GHIssue issue : agendaIssues) {
       System.out.println("Issue " + issue.getNumber());
+
+      ArrayList<HashTagValue> extractedValues = new ArrayList<>();
       builder.append("<h2>");
       if (o.issueIdInTitle) {
         builder.append(issue.getNumber());
@@ -455,6 +499,16 @@ public class Main {
           Node mdDoc = mdParser.parse(body);
           HtmlRenderer renderer = HtmlRenderer.builder().build();
           builder.append(renderer.render(mdDoc));
+
+          // check body for hashtag values
+
+          for (int i=0; i < extractHashTags.size(); i++) {
+            HashTag ht = extractHashTags.get(i);
+            String tagValue = ht.getValue(body);
+            if (tagValue != null) {
+              extractedValues.set(i, new HashTagValue(ht, tagValue,issue.getCreatedAt() ));
+            }
+          }
         }
       }
 
@@ -475,9 +529,45 @@ public class Main {
             Node mdDoc = mdParser.parse(body);
             HtmlRenderer renderer = HtmlRenderer.builder().build();
             builder.append(renderer.render(mdDoc));
+
+
+          // check comment text for hashtag values
+
+          for (int i=0; i < extractHashTags.size(); i++) {
+            HashTag ht = extractHashTags.get(i);
+            String tagValue = ht.getValue(body);
+            if (tagValue != null) {
+              extractedValues.add(i, new HashTagValue(ht, tagValue, comment.getCreatedAt() ));
+            }
+          }
           }
         }
       }
+
+      // output extracted values to CSV file
+
+      if (csvWriter != null) {
+        csvWriter.print(issue.getNumber());
+        csvWriter.print(",\"" + issue.getTitle() + "\",");
+        System.out.println(issue.getTitle());
+
+        for (int i=0; i < extractHashTags.size(); i++) {
+          HashTagValue htv = null;
+          if (i < extractedValues.size()) {
+            htv = extractedValues.get(i);
+          }
+          if (htv != null) {
+            csvWriter.print("\"" + htv.getValue() + "\"");
+          }
+          if ((i+1) < extractHashTags.size()) {
+            csvWriter.print(",");
+          }
+        }
+        csvWriter.println(); 
+        csvWriter.flush();
+      }
+
+
     }
 
     builder.append("</ul>");
@@ -486,6 +576,10 @@ public class Main {
       HtmlConverter.convertToPdf(builder.toString(), pdfFile);
       logger.info("Wrote file {}", o.outPath);
     }
+
+    if (csvWriter != null) {
+          csvWriter.println();
+        }
   }
 
   public static class Options {
@@ -520,6 +614,13 @@ public class Main {
       description = "Labels specifying the issues of interest, default to ALL issues"
     )
     List<String> labels = new ArrayList<>();
+
+     @Parameter(
+      required = false,
+      names = {"-e", "--extract"},
+      description = "List of hashtag values to extract from github comments"
+    )
+    List<String> hashtags = new ArrayList<>();
 
     @Parameter(
       required = true,

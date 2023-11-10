@@ -32,6 +32,12 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
+
+task copyDocs(type: Copy) {
+    from 'src/test/resources'
+    into 'build/resources/main'
+    include '*.tags'
+}
 /*
 tasks.named('test', Test) {
     useJUnitPlatform()
